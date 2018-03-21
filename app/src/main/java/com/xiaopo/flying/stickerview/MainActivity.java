@@ -124,6 +124,11 @@ public class MainActivity extends AppCompatActivity {
       public void onStickerDoubleTapped(@NonNull Sticker sticker) {
         Log.d(TAG, "onDoubleTapped: double tap will be with two click");
       }
+
+      @Override
+      public void onStickerNotClicked() {
+        stickerView.invalidate();
+      }
     });
 
     if (toolbar != null) {

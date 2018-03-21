@@ -3,6 +3,8 @@
     <declare-styleable name="StickerView">
         <attr name="showIcons" format="boolean" />
         <attr name="showBorder" format="boolean" />
+        <attr name="exportHeight" format="integer"/>
+        <attr name="exportWidth" format="integer"/>
         <attr name="bringToFrontCurrentSticker" format="boolean" />
         <attr name="borderColor" format="color"/>
         <attr name="borderAlpha" format="integer"/>

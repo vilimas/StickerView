@@ -37,6 +37,8 @@ public class StickerView extends FrameLayout {
 
   private final boolean showIcons;
   private final boolean showBorder;
+  private final int exportHeight;
+  private final int exportWidth;
   private final boolean bringToFrontCurrentSticker;
 
   @IntDef({
@@ -117,6 +119,8 @@ public class StickerView extends FrameLayout {
       a = context.obtainStyledAttributes(attrs, R.styleable.StickerView);
       showIcons = a.getBoolean(R.styleable.StickerView_showIcons, false);
       showBorder = a.getBoolean(R.styleable.StickerView_showBorder, false);
+      exportHeight = a.getInteger(R.styleable.StickerView_exportHeight, 1080);
+      exportWidth = a.getInteger(R.styleable.StickerView_exportWidth, 1080);
       bringToFrontCurrentSticker =
           a.getBoolean(R.styleable.StickerView_bringToFrontCurrentSticker, false);
 
@@ -350,6 +354,9 @@ public class StickerView extends FrameLayout {
     }
 
     if (currentIcon == null && handlingSticker == null) {
+      if (onStickerOperationListener != null) {
+        onStickerOperationListener.onStickerNotClicked();
+      }
       return false;
     }
     invalidate();
@@ -786,7 +793,23 @@ public class StickerView extends FrameLayout {
     Bitmap bitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
     Canvas canvas = new Canvas(bitmap);
     this.draw(canvas);
-    return bitmap;
+    return getResizedBitmap(bitmap, exportWidth, exportHeight);
+  }
+
+  public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
+    int width = bm.getWidth();
+    int height = bm.getHeight();
+    float scaleWidth = ((float) newWidth) / width;
+    float scaleHeight = ((float) newHeight) / height;
+    // CREATE A MATRIX FOR THE MANIPULATION
+    Matrix matrix = new Matrix();
+    // RESIZE THE BIT MAP
+    matrix.postScale(scaleWidth, scaleHeight);
+    // "RECREATE" THE NEW BITMAP
+    Bitmap resizedBitmap = Bitmap.createBitmap(
+            bm, 0, 0, width, height, matrix, false);
+    bm.recycle();
+    return resizedBitmap;
   }
 
   public int getStickerCount() {
@@ -864,5 +887,7 @@ public class StickerView extends FrameLayout {
     void onStickerFlipped(@NonNull Sticker sticker);
 
     void onStickerDoubleTapped(@NonNull Sticker sticker);
+
+    void onStickerNotClicked();
   }
 }
