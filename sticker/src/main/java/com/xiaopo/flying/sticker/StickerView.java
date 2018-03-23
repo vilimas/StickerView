@@ -203,7 +203,7 @@ public class StickerView extends FrameLayout {
       }
     }
 
-    if (handlingSticker != null && !locked && (showBorder || showIcons)) {
+    if (handlingSticker != null && !locked && (showBorder || showIcons) && !handlingSticker.isLocked()) {
 
       getStickerPoints(handlingSticker, bitmapPoints);
 
@@ -263,14 +263,24 @@ public class StickerView extends FrameLayout {
   }
 
   @Override public boolean onInterceptTouchEvent(MotionEvent ev) {
-    if (locked) return super.onInterceptTouchEvent(ev);
+   // if (locked) return super.onInterceptTouchEvent(ev);
 
     switch (ev.getAction()) {
       case MotionEvent.ACTION_DOWN:
         downX = ev.getX();
         downY = ev.getY();
-
-        return findCurrentIconTouched() != null || findHandlingSticker() != null;
+        if(findCurrentIconTouched() != null) {
+          return findCurrentIconTouched() != null || findHandlingSticker() != null;
+        }
+        if (findHandlingSticker() != null){
+          if (findHandlingSticker().isLocked()){
+            return super.onInterceptTouchEvent(ev);
+          } else {
+            return findCurrentIconTouched() != null || findHandlingSticker() != null;
+          }
+        } else {
+          return findCurrentIconTouched() != null || findHandlingSticker() != null;
+        }
     }
 
     return super.onInterceptTouchEvent(ev);
@@ -704,26 +714,28 @@ public class StickerView extends FrameLayout {
   }
 
   @NonNull public StickerView addSticker(@NonNull Sticker sticker) {
-    return addSticker(sticker, Sticker.Position.CENTER);
+    return addSticker(sticker, Sticker.Position.CENTER, false);
+  }
+
+  @NonNull public StickerView addFrame(@NonNull Sticker sticker) {
+    return addSticker(sticker, Sticker.Position.TOP | Sticker.Position.LEFT, true);
   }
 
   public StickerView addSticker(@NonNull final Sticker sticker,
-      final @Sticker.Position int position) {
+      final @Sticker.Position int position, final Boolean isFrame) {
     if (ViewCompat.isLaidOut(this)) {
-      addStickerImmediately(sticker, position);
+      addStickerImmediately(sticker, position, isFrame);
     } else {
       post(new Runnable() {
         @Override public void run() {
-          addStickerImmediately(sticker, position);
+          addStickerImmediately(sticker, position, isFrame);
         }
       });
     }
     return this;
   }
 
-  protected void addStickerImmediately(@NonNull Sticker sticker, @Sticker.Position int position) {
-    setStickerPosition(sticker, position);
-
+  protected void addStickerImmediately(@NonNull Sticker sticker, @Sticker.Position int position, Boolean isFrame) {
 
     float scaleFactor, widthScaleFactor, heightScaleFactor;
 
@@ -731,8 +743,15 @@ public class StickerView extends FrameLayout {
     heightScaleFactor = (float) getHeight() / sticker.getDrawable().getIntrinsicHeight();
     scaleFactor = widthScaleFactor > heightScaleFactor ? heightScaleFactor : widthScaleFactor;
 
-    sticker.getMatrix()
-        .postScale(scaleFactor / 2, scaleFactor / 2, getWidth() / 2, getHeight() / 2);
+    setStickerPosition(sticker, position, isFrame, widthScaleFactor, heightScaleFactor);
+
+    if (!isFrame) {
+      sticker.getMatrix()
+              .postScale(scaleFactor / 2, scaleFactor / 2, getWidth() / 2, getHeight() / 2);
+    } else {
+      sticker.getMatrix()
+              .postScale(widthScaleFactor, heightScaleFactor, getWidth(), getHeight());
+    }
 
     handlingSticker = sticker;
     stickers.add(sticker);
@@ -742,7 +761,7 @@ public class StickerView extends FrameLayout {
     invalidate();
   }
 
-  protected void setStickerPosition(@NonNull Sticker sticker, @Sticker.Position int position) {
+  protected void setStickerPosition(@NonNull Sticker sticker, @Sticker.Position int position, Boolean isFrame, Float widthScaleFactor, Float heightScaleFactor) {
     float width = getWidth();
     float height = getHeight();
     float offsetX = width - sticker.getWidth();
@@ -761,7 +780,11 @@ public class StickerView extends FrameLayout {
     } else {
       offsetX /= 2f;
     }
-    sticker.getMatrix().postTranslate(offsetX, offsetY);
+    if (isFrame) {
+      sticker.getMatrix().postTranslate(sticker.getWidth() * widthScaleFactor - sticker.getWidth(), sticker.getHeight() * heightScaleFactor - sticker.getHeight());
+    } else {
+      sticker.getMatrix().postTranslate(offsetX, offsetY);
+    }
   }
 
   @NonNull public float[] getStickerPoints(@Nullable Sticker sticker) {

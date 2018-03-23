@@ -168,20 +168,24 @@ public class MainActivity extends AppCompatActivity {
 
   private void loadSticker() {
     Drawable drawable =
-            ContextCompat.getDrawable(this, R.drawable.haizewang_215);
+            ContextCompat.getDrawable(this, R.drawable.ic_frames_badgal);
     Drawable drawable1 =
             ContextCompat.getDrawable(this, R.drawable.haizewang_23);
-    stickerView.addSticker(new DrawableSticker(drawable));
-    stickerView.addSticker(new DrawableSticker(drawable1), Sticker.Position.BOTTOM | Sticker.Position.RIGHT);
+    DrawableSticker stick = new DrawableSticker(drawable);
+    stick.setLocked(true);
+    stickerView.addFrame(stick);
+    DrawableSticker stick1 = new DrawableSticker(drawable1);
+    stick1.setLocked(false);
+    stickerView.addSticker(stick1);
 
     Drawable bubble = ContextCompat.getDrawable(this, R.drawable.bubble);
-    stickerView.addSticker(
-            new TextSticker(getApplicationContext())
-                    .setDrawable(bubble)
-                    .setText("Sticker\n")
-                    .setMaxTextSize(14)
-                    .resizeText()
-            , Sticker.Position.TOP);
+//    stickerView.addSticker(
+//            new TextSticker(getApplicationContext())
+//                    .setDrawable(bubble)
+//                    .setText("Sticker\n")
+//                    .setMaxTextSize(14)
+//                    .resizeText()
+//            , Sticker.Position.TOP);
   }
 
   @Override
